@@ -1,9 +1,9 @@
-const app = require('express')();
+const express = require('express');
 const blc = require('broken-link-checker');
-
+const app = express();
 
 // Ruta para verificar enlaces rotos
-app.get('/api/check-links', async (req, res) => {
+app.get('/check-links', async (req, res) => {
   const url = req.query.url;
 
   if (!url) {
@@ -44,4 +44,8 @@ const siteChecker = new blc.SiteChecker(options, {
 siteChecker.enqueue(url);
 });
 
-module.exports = app;
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Servidor en ejecución en http://localhost:${PORT}`);
+});
