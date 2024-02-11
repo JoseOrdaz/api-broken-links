@@ -1,33 +1,51 @@
-const app = require("express")()
+const express = require('express');
+const blc = require('broken-link-checker');
+const app = express();
 
-const JsSearch = require("js-search")
+// Ruta para verificar enlaces rotos
+app.get('/check-links', async (req, res) => {
+  const url = req.query.url;
 
-const breeds = require("./breeds.json")
-
-const search = new JsSearch.Search("name") // remember the name key from breeds.json
-// search.addIndex("name")
-search.addDocuments(breeds)
-search.addIndex("name")
-
-app.get("/api/breeds", (req, res) => {
-  const { query } = req
-
-  try {
-    const breed = query.search
-
-    if (breed) {
-      //   res.send(breeds.find((b) => b.name === breed)) . //old impleentation
-      res.send(search.search(breed))
-    }
-    res.send(breeds.map((b) => ({ name: b })))
-  } catch (error) {
-    console.log("error", error)
+  if (!url) {
+    return res.status(400).json({ error: 'La URL es requerida.' });
   }
-})
 
-app.get("/api/breeds/:id", (req, res) => {
-  const { id } = req.params
-  res.send(breeds[id])
-})
+  
+  const options = {
+    filterLevel: 1,
+    excludeExternalLinks: true,
+    excludeInternalLinks: false,
+    userAgent: 'Your User Agent',
+    acceptedSchemes: ['http', 'https'],
+    excludedKeywords: [],
+};
 
-module.exports = app
+let brokenLinks = [];
+
+const siteChecker = new blc.SiteChecker(options, {
+    link: (result) => {
+
+        if (result.broken) {
+            
+            brokenLinks.push({
+                url: result.url.resolved,
+                status: result.brokenReason,
+            });
+        }
+    },
+    end: () => {
+
+        console.log('PROCESO FINALIZADO'); // Mostrar "OK" cuando el proceso ha finalizado
+        res.json(brokenLinks); // Enviar los enlaces rotos como JSON
+        app.set('brokenLinks', brokenLinks);
+    },
+});
+
+siteChecker.enqueue(url);
+});
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Servidor en ejecución en http://localhost:${PORT}`);
+});
