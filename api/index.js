@@ -3,7 +3,7 @@ const blc = require('broken-link-checker');
 
 
 // Ruta para verificar enlaces rotos
-app.get('/check-links', async (req, res) => {
+app.get('/api/check-links', async (req, res) => {
   const url = req.query.url;
 
   if (!url) {
